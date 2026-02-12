@@ -8,6 +8,7 @@ $config['universal_oidc_mail_sso_redirect_uri'] = getenv('OIDC_REDIRECT_URI') ?:
 $config['universal_oidc_mail_sso_post_logout_redirect_uri'] = getenv('OIDC_POST_LOGOUT_REDIRECT_URI') ?: null;
 $config['universal_oidc_mail_sso_scopes'] = getenv('OIDC_SCOPES') ?: 'openid email profile groups';
 $config['universal_oidc_mail_sso_allowed_email_domain'] = getenv('ALLOWED_EMAIL_DOMAIN') ?: '';
+$config['universal_oidc_mail_sso_allow_custom_mailbox_email'] = getenv('ALLOW_CUSTOM_MAILBOX_EMAIL') ?: false;
 
 // Security / behavior
 $config['universal_oidc_mail_sso_mailbox_key'] = getenv('RCUBE_MAILBOX_KEY') ?: '';

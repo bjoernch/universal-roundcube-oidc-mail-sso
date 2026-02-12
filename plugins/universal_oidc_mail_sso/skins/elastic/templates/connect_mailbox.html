@@ -19,6 +19,8 @@
     .pizsso-success { background:#e9f9ef; border:1px solid #8ed6a4; color:#0f5f2b; border-radius:8px; padding:10px 12px; margin:0 0 14px; }
     .actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
     .actions button.secondary { background:#fff; color:#0b5fff; border:1px solid #8fb4ff; }
+    .info { margin:0 0 14px; background:#f2f7ff; border:1px solid #bcd3ff; border-radius:8px; padding:10px 12px; }
+    .info ul { margin:8px 0 0 18px; padding:0; color:#2f4760; font-size:13px; }
     @media (max-width: 720px) { .card { margin:20px 12px; } .grid { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -26,6 +28,14 @@
   <main class="card">
     <h1>Connect account</h1>
     <p>Enter your mailbox password (or app-password) once. It will be encrypted and reused for automatic login.</p>
+    <div class="info">
+      <strong>Why this setup is secure and convenient</strong>
+      <ul>
+        <li>By default, your mailbox email is locked to your verified OIDC email.</li>
+        <li>Your mailbox password is encrypted before it is stored.</li>
+        <li>After setup, login is passwordless through your OIDC provider.</li>
+      </ul>
+    </div>
     {{message}}
     <form method="post" action="{{form_action}}">
       <input type="hidden" name="_token" value="{{csrf_token}}">
@@ -33,7 +43,8 @@
       <div class="grid">
         <div class="full">
           <label for="email">Email</label>
-          <input id="email" name="email" type="email" required value="{{email}}">
+          <input id="email" name="email" type="email" required value="{{email}}" {{email_readonly_attr}}>
+          {{email_policy_hint}}
         </div>
 
         <div class="full">
@@ -91,7 +102,7 @@
         <button class="secondary" type="submit" name="intent" value="test">Test connection</button>
         <button type="submit" name="intent" value="save">Save and continue</button>
       </div>
-      <div class="hint">No plaintext passwords are stored in the database.</div>
+      <div class="hint">Admins can review mappings and enforce domain/host restrictions in the SSO admin dashboard.</div>
     </form>
   </main>
 </body>

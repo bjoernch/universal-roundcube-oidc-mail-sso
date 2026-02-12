@@ -71,11 +71,27 @@ class universal_oidc_mail_sso extends rcube_plugin
 
     public function startup(array $args): array
     {
+        $action = rcube_utils::get_input_value('_action', rcube_utils::INPUT_GPC);
+
+        // If admin plugin endpoints are accessed directly without a Roundcube
+        // session, start OIDC login flow instead of failing with access errors.
+        if ($this->rc->task === 'settings'
+            && is_string($action)
+            && in_array($action, [
+                self::ACTION_ADMIN,
+                self::ACTION_ADMIN_SAVE_POLICY,
+                self::ACTION_ADMIN_DELETE_USER,
+                self::ACTION_ADMIN_SET_USER_STATUS,
+            ], true)
+            && empty($_SESSION['user_id'])
+        ) {
+            $this->redirectTo($this->urlForAction(self::ACTION_LOGIN));
+        }
+
         if ($this->rc->task !== 'login' || !empty($_SESSION['user_id'])) {
             return $args;
         }
 
-        $action = rcube_utils::get_input_value('_action', rcube_utils::INPUT_GPC);
         if (is_string($action) && strpos($action, 'plugin.universal_oidc_mail_sso_') === 0) {
             // Fallback direct dispatcher for environments where register_action
             // doesn't route plugin actions in login task as expected.
@@ -461,7 +477,7 @@ class universal_oidc_mail_sso extends rcube_plugin
             return;
         }
 
-        if ($email !== strtolower((string) $oidcEmail)) {
+        if ($this->isStrictOidcEmailBinding() && $email !== strtolower((string) $oidcEmail)) {
             $this->renderConnectMailboxPage('Email must match your OIDC account.');
             return;
         }
@@ -577,12 +593,17 @@ class universal_oidc_mail_sso extends rcube_plugin
         $imapSecurity = (string) ($values['imap_security'] ?? $this->cfg('default_imap_security', 'ssl'));
         $smtpSecurity = (string) ($values['smtp_security'] ?? $this->cfg('default_smtp_security', 'tls'));
         $smtpAuthChecked = (string) ($values['smtp_auth'] ?? (((string) $this->cfg('default_smtp_auth', '1') !== '0') ? '1' : '0'));
+        $strictEmailBinding = $this->isStrictOidcEmailBinding();
 
         $replacements = [
             '{{form_action}}' => htmlspecialchars($this->rc->url(['task' => 'login', 'action' => self::ACTION_SAVE_MAILBOX]), ENT_QUOTES, 'UTF-8'),
             '{{csrf_token}}' => htmlspecialchars(rcmail::get_instance()->get_request_token(), ENT_QUOTES, 'UTF-8'),
             '{{message}}' => $message !== '' ? '<div class="' . ($isError ? 'pizsso-error' : 'pizsso-success') . '">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</div>' : '',
             '{{email}}' => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+            '{{email_readonly_attr}}' => $strictEmailBinding ? 'readonly' : '',
+            '{{email_policy_hint}}' => $strictEmailBinding
+                ? '<div class="hint">Email is locked to your verified OIDC account by admin policy.</div>'
+                : '<div class="hint">Admin policy allows overriding mailbox email.</div>',
             '{{imap_host}}' => htmlspecialchars((string) ($values['imap_host'] ?? $this->cfg('default_imap_host', 'imap.example.com')), ENT_QUOTES, 'UTF-8'),
             '{{imap_port}}' => htmlspecialchars((string) ($values['imap_port'] ?? $this->cfg('default_imap_port', '993')), ENT_QUOTES, 'UTF-8'),
             '{{imap_security_ssl_selected}}' => ($imapSecurity === 'ssl') ? 'selected' : '',
@@ -700,6 +721,7 @@ class universal_oidc_mail_sso extends rcube_plugin
             'allowed_email_domains',
             'allowed_imap_hosts',
             'allowed_smtp_hosts',
+            'allow_custom_mailbox_email',
         ]);
 
         return $this->policyCache;
@@ -913,6 +935,18 @@ class universal_oidc_mail_sso extends rcube_plugin
         return false;
     }
 
+    private function isStrictOidcEmailBinding(): bool
+    {
+        $policies = $this->getPolicies();
+        $policyVal = strtolower(trim((string) ($policies['allow_custom_mailbox_email'] ?? '')));
+        if ($policyVal !== '') {
+            return !in_array($policyVal, ['1', 'true', 'yes', 'on'], true);
+        }
+
+        // Strict by default unless explicitly disabled.
+        return !$this->cfgBool('allow_custom_mailbox_email', false);
+    }
+
     public function actionAdminDashboard(): void
     {
         if ($this->rc->task !== 'settings') {
@@ -993,6 +1027,10 @@ class universal_oidc_mail_sso extends rcube_plugin
             '{{allowed_domains}}' => htmlspecialchars((string) ($policies['allowed_email_domains'] ?? ''), ENT_QUOTES, 'UTF-8'),
             '{{allowed_imap_hosts}}' => htmlspecialchars((string) ($policies['allowed_imap_hosts'] ?? ''), ENT_QUOTES, 'UTF-8'),
             '{{allowed_smtp_hosts}}' => htmlspecialchars((string) ($policies['allowed_smtp_hosts'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            '{{allow_custom_mailbox_email_checked}}' => !empty($policies['allow_custom_mailbox_email'])
+                && in_array(strtolower((string) $policies['allow_custom_mailbox_email']), ['1', 'true', 'yes', 'on'], true)
+                ? 'checked'
+                : '',
         ]);
 
         header('Content-Type: text/html; charset=UTF-8');
@@ -1015,10 +1053,12 @@ class universal_oidc_mail_sso extends rcube_plugin
         $allowedDomains = trim((string) rcube_utils::get_input_value('allowed_email_domains', rcube_utils::INPUT_POST));
         $allowedImapHosts = trim((string) rcube_utils::get_input_value('allowed_imap_hosts', rcube_utils::INPUT_POST));
         $allowedSmtpHosts = trim((string) rcube_utils::get_input_value('allowed_smtp_hosts', rcube_utils::INPUT_POST));
+        $allowCustomMailboxEmail = rcube_utils::get_input_value('allow_custom_mailbox_email', rcube_utils::INPUT_POST) ? '1' : '0';
 
         $this->storage->setPolicy('allowed_email_domains', $allowedDomains);
         $this->storage->setPolicy('allowed_imap_hosts', $allowedImapHosts);
         $this->storage->setPolicy('allowed_smtp_hosts', $allowedSmtpHosts);
+        $this->storage->setPolicy('allow_custom_mailbox_email', $allowCustomMailboxEmail);
         $this->policyCache = null;
 
         $this->audit('admin_policy', 'ok', 'policy updated');
@@ -1163,6 +1203,7 @@ class universal_oidc_mail_sso extends rcube_plugin
             'redirect_uri' => 'OIDC_REDIRECT_URI',
             'post_logout_redirect_uri' => 'OIDC_POST_LOGOUT_REDIRECT_URI',
             'allowed_email_domain' => 'ALLOWED_EMAIL_DOMAIN',
+            'allow_custom_mailbox_email' => 'ALLOW_CUSTOM_MAILBOX_EMAIL',
             'mailbox_key' => 'RCUBE_MAILBOX_KEY',
             'force_https' => 'FORCE_HTTPS',
             'disable_password_login' => 'DISABLE_PASSWORD_LOGIN',

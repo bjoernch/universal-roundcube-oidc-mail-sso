@@ -14,6 +14,8 @@
     th, td { border:1px solid #d8e0ea; padding:6px 8px; text-align:left; vertical-align:top; }
     th { background:#f6f8fb; }
     .hint { color:#5d6c7c; font-size:12px; margin-top:8px; }
+    .info { margin-top:10px; background:#f2f7ff; border:1px solid #bcd3ff; border-radius:8px; padding:10px 12px; }
+    .info ul { margin:8px 0 0 18px; padding:0; color:#2f4760; font-size:13px; }
     label { display:block; font-size:13px; font-weight:600; margin:0 0 6px; }
     input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #c5cfda; border-radius:8px; font-size:13px; margin-bottom:8px; }
     button { background:#0b5fff; color:#fff; border:none; border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer; }
@@ -25,6 +27,15 @@
     <section class="card">
       <h1>SSO Admin Dashboard</h1>
       <div class="hint">Access is restricted to users in the <code>webmail_admin</code> group (configurable).</div>
+      <div class="info">
+        <strong>Universal OIDC Mail SSO capabilities</strong>
+        <ul>
+          <li>OIDC login with automatic mailbox profile mapping.</li>
+          <li>Strict email identity binding by default (OIDC email only).</li>
+          <li>Central policy controls for allowed email domains and IMAP/SMTP hosts.</li>
+          <li>Audit trail and account lifecycle actions (disable/delete mappings).</li>
+        </ul>
+      </div>
     </section>
 
     <section class="card">
@@ -40,6 +51,8 @@
 
         <label for="allowed_smtp_hosts">Allowed SMTP hosts (comma-separated, `*` = any)</label>
         <input id="allowed_smtp_hosts" name="allowed_smtp_hosts" type="text" value="{{allowed_smtp_hosts}}" placeholder="smtp.example.com,mail.example.org">
+
+        <label><input type="checkbox" name="allow_custom_mailbox_email" value="1" {{allow_custom_mailbox_email_checked}}> Allow users to override mailbox email (default: disabled/strict OIDC email binding)</label>
 
         <button type="submit">Save Policies</button>
       </form>

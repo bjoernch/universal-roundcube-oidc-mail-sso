@@ -11,6 +11,9 @@ Roundcube plugin for:
 - OIDC discovery from `OIDC_ISSUER`
 - PKCE (`S256`) + `state` + `nonce`
 - ID token validation via JWKS (`RS256`)
+- Strong identity binding by default:
+  - mailbox email is locked to the verified OIDC `email` claim
+  - admins can optionally allow custom mailbox email overrides
 - Required claim mapping:
   - stable user id: `sub`
   - email/login id: `email` (required)
@@ -25,6 +28,11 @@ Roundcube plugin for:
 - Built-in IMAP/SMTP credential test before saving profile
 - Audit log table for authentication/provisioning events
 - Admin dashboard for mapped accounts + audit history (restricted by OIDC group)
+- Admin controls for lifecycle/security:
+  - enable/disable mapped users
+  - delete mapped users
+  - restrict allowed email domains and IMAP/SMTP hosts
+  - toggle strict OIDC-email binding policy
 - Session-based setup form throttle + CSRF protection
 - Reverse proxy aware redirect URI construction (`X-Forwarded-Proto`, `X-Forwarded-Host`, `FORCE_HTTPS`)
 
@@ -60,6 +68,7 @@ Optional:
 - `OIDC_REDIRECT_URI` (if omitted, plugin computes from request/proxy headers)
 - `OIDC_POST_LOGOUT_REDIRECT_URI`
 - `ALLOWED_EMAIL_DOMAIN` (optional; empty or `*` allows all domains)
+- `ALLOW_CUSTOM_MAILBOX_EMAIL=false` (default strict binding to OIDC email)
 - `FORCE_HTTPS=true`
 - `DISABLE_PASSWORD_LOGIN=true`
 - `ADMIN_GROUP_NAME=webmail_admin`
@@ -184,6 +193,7 @@ Covers:
 - Decrypted credentials are used only in memory at auth/connect time.
 - Logs intentionally avoid secrets/tokens/passwords.
 - Missing claim/domain mismatch/missing mailbox/decrypt failures fail closed.
+- Mailbox email binding is strict by default (OIDC `email` must match setup email).
 - CSRF token enforced on connect form submission.
 - Basic session-based rate limit applied to setup submissions.
 

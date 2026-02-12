@@ -57,30 +57,37 @@ Tables:
 - `oidc_mail_sso_mailbox` encrypted mailbox config and app-password
 - `oidc_mail_sso_audit_log` structured event/audit history
 
-## Required env vars
+## Environment variables (plugin)
 
+Required:
 - `OIDC_ISSUER` (e.g. `https://oidc.example.com`)
 - `OIDC_CLIENT_ID`
 - `RCUBE_MAILBOX_KEY` (base64 of exactly 32 random bytes)
 
-Optional:
+Optional OIDC/auth:
 - `OIDC_CLIENT_SECRET` (for confidential clients)
 - `OIDC_REDIRECT_URI` (if omitted, plugin computes from request/proxy headers)
 - `OIDC_POST_LOGOUT_REDIRECT_URI`
-- `ALLOWED_EMAIL_DOMAIN` (optional; empty or `*` allows all domains)
-- `ALLOW_CUSTOM_MAILBOX_EMAIL=false` (default strict binding to OIDC email)
-- `FORCE_HTTPS=true`
-- `DISABLE_PASSWORD_LOGIN=true`
-- `ADMIN_GROUP_NAME=webmail_admin`
+- `OIDC_SCOPES` (default `openid email profile groups`)
 
-Generic defaults (override as needed):
-- `DEFAULT_IMAP_HOST=imap.example.com`
-- `DEFAULT_IMAP_PORT=993`
-- `DEFAULT_IMAP_SECURITY=ssl`
-- `DEFAULT_SMTP_HOST=smtp.example.com`
-- `DEFAULT_SMTP_PORT=587`
-- `DEFAULT_SMTP_SECURITY=tls`
-- `DEFAULT_SMTP_AUTH=1`
+Optional policy/admin:
+- `ALLOWED_EMAIL_DOMAIN` (empty or `*` allows all domains)
+- `ALLOW_CUSTOM_MAILBOX_EMAIL` (default `false`; strict OIDC email binding)
+- `ADMIN_GROUP_NAME` (default `webmail_admin`, supports comma-separated groups)
+- `ADMIN_EMAILS` (optional fallback allowlist when group claim is absent)
+
+Optional behavior:
+- `FORCE_HTTPS` (default `false`)
+- `DISABLE_PASSWORD_LOGIN` (default `true`)
+
+Connect form defaults (can be overridden by users/admin policies):
+- `DEFAULT_IMAP_HOST` (default `imap.example.com`)
+- `DEFAULT_IMAP_PORT` (default `993`)
+- `DEFAULT_IMAP_SECURITY` (default `ssl`)
+- `DEFAULT_SMTP_HOST` (default `smtp.example.com`)
+- `DEFAULT_SMTP_PORT` (default `587`)
+- `DEFAULT_SMTP_SECURITY` (default `tls`)
+- `DEFAULT_SMTP_AUTH` (default `1`)
 
 Generate key:
 

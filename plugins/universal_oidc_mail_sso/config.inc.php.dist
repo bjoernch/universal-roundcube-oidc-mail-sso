@@ -1,0 +1,26 @@
+<?php
+
+// OIDC
+$config['universal_oidc_mail_sso_issuer'] = getenv('OIDC_ISSUER') ?: 'https://oidc.example.com';
+$config['universal_oidc_mail_sso_client_id'] = getenv('OIDC_CLIENT_ID') ?: '';
+$config['universal_oidc_mail_sso_client_secret'] = getenv('OIDC_CLIENT_SECRET') ?: '';
+$config['universal_oidc_mail_sso_redirect_uri'] = getenv('OIDC_REDIRECT_URI') ?: null;
+$config['universal_oidc_mail_sso_post_logout_redirect_uri'] = getenv('OIDC_POST_LOGOUT_REDIRECT_URI') ?: null;
+$config['universal_oidc_mail_sso_scopes'] = getenv('OIDC_SCOPES') ?: 'openid email profile groups';
+$config['universal_oidc_mail_sso_allowed_email_domain'] = getenv('ALLOWED_EMAIL_DOMAIN') ?: '';
+
+// Security / behavior
+$config['universal_oidc_mail_sso_mailbox_key'] = getenv('RCUBE_MAILBOX_KEY') ?: '';
+$config['universal_oidc_mail_sso_force_https'] = getenv('FORCE_HTTPS') ?: true;
+$config['universal_oidc_mail_sso_disable_password_login'] = getenv('DISABLE_PASSWORD_LOGIN') ?: true;
+
+// Generic mail server defaults
+$config['universal_oidc_mail_sso_default_imap_host'] = getenv('DEFAULT_IMAP_HOST') ?: 'imap.example.com';
+$config['universal_oidc_mail_sso_default_imap_port'] = getenv('DEFAULT_IMAP_PORT') ?: 993;
+$config['universal_oidc_mail_sso_default_imap_security'] = getenv('DEFAULT_IMAP_SECURITY') ?: 'ssl';
+$config['universal_oidc_mail_sso_default_smtp_host'] = getenv('DEFAULT_SMTP_HOST') ?: 'smtp.example.com';
+$config['universal_oidc_mail_sso_default_smtp_port'] = getenv('DEFAULT_SMTP_PORT') ?: 587;
+$config['universal_oidc_mail_sso_default_smtp_security'] = getenv('DEFAULT_SMTP_SECURITY') ?: 'tls';
+$config['universal_oidc_mail_sso_default_smtp_auth'] = getenv('DEFAULT_SMTP_AUTH') ?: 1;
+$config['universal_oidc_mail_sso_admin_group_name'] = getenv('ADMIN_GROUP_NAME') ?: 'webmail_admin';
+$config['universal_oidc_mail_sso_admin_emails'] = getenv('ADMIN_EMAILS') ?: '';

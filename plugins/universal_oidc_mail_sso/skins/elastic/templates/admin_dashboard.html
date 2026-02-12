@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SSO Admin Dashboard</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background:#f4f6f9; color:#1d2733; margin:0; }
+    .wrap { max-width:1200px; margin:24px auto; padding:0 12px; }
+    .card { background:#fff; border:1px solid #d8e0ea; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,.05); padding:16px; margin-bottom:14px; }
+    h1 { margin:0 0 8px; font-size:24px; }
+    h2 { margin:0 0 10px; font-size:18px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border:1px solid #d8e0ea; padding:6px 8px; text-align:left; vertical-align:top; }
+    th { background:#f6f8fb; }
+    .hint { color:#5d6c7c; font-size:12px; margin-top:8px; }
+    label { display:block; font-size:13px; font-weight:600; margin:0 0 6px; }
+    input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #c5cfda; border-radius:8px; font-size:13px; margin-bottom:8px; }
+    button { background:#0b5fff; color:#fff; border:none; border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer; }
+    @media (max-width: 900px) { table { font-size:12px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>SSO Admin Dashboard</h1>
+      <div class="hint">Access is restricted to users in the <code>webmail_admin</code> group (configurable).</div>
+    </section>
+
+    <section class="card">
+      <h2>Access Policies</h2>
+      <form method="post" action="{{policy_form_action}}">
+        <input type="hidden" name="_token" value="{{csrf_token}}">
+
+        <label for="allowed_email_domains">Allowed email domains (comma-separated, `*` = any)</label>
+        <input id="allowed_email_domains" name="allowed_email_domains" type="text" value="{{allowed_domains}}" placeholder="example.com,example.org">
+
+        <label for="allowed_imap_hosts">Allowed IMAP hosts (comma-separated, `*` = any)</label>
+        <input id="allowed_imap_hosts" name="allowed_imap_hosts" type="text" value="{{allowed_imap_hosts}}" placeholder="imap.example.com,mail.example.org">
+
+        <label for="allowed_smtp_hosts">Allowed SMTP hosts (comma-separated, `*` = any)</label>
+        <input id="allowed_smtp_hosts" name="allowed_smtp_hosts" type="text" value="{{allowed_smtp_hosts}}" placeholder="smtp.example.com,mail.example.org">
+
+        <button type="submit">Save Policies</button>
+      </form>
+      <div class="hint">These policies are enforced on setup and SSO autologin.</div>
+    </section>
+
+    <section class="card">
+      <h2>Mapped Accounts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>OIDC Sub</th>
+            <th>Status</th>
+            <th>Mailbox Profile</th>
+            <th>IMAP Host</th>
+            <th>SMTP Host</th>
+            <th>Last OIDC Login</th>
+            <th>Last Mailbox Use</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{overview_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Recent Audit Events</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{audit_rows}}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

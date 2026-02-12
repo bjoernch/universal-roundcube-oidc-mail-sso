@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Connect account</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background:#f4f6f9; color:#1d2733; margin:0; }
+    .card { max-width:700px; margin:40px auto; background:#fff; border:1px solid #d8e0ea; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,.06); padding:24px; }
+    h1 { margin:0 0 12px; font-size:24px; }
+    p { margin:0 0 20px; color:#4a5a6a; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .full { grid-column:1 / -1; }
+    label { display:block; font-size:13px; font-weight:600; margin:0 0 6px; }
+    input,select { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #c5cfda; border-radius:8px; font-size:14px; }
+    button { margin-top:16px; background:#0b5fff; color:#fff; border:none; border-radius:8px; padding:11px 16px; font-size:14px; cursor:pointer; }
+    .hint { font-size:12px; color:#5d6c7c; margin-top:8px; }
+    .pizsso-error { background:#ffeded; border:1px solid #f7b4b4; color:#a90000; border-radius:8px; padding:10px 12px; margin:0 0 14px; }
+    .pizsso-success { background:#e9f9ef; border:1px solid #8ed6a4; color:#0f5f2b; border-radius:8px; padding:10px 12px; margin:0 0 14px; }
+    .actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+    .actions button.secondary { background:#fff; color:#0b5fff; border:1px solid #8fb4ff; }
+    @media (max-width: 720px) { .card { margin:20px 12px; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Connect account</h1>
+    <p>Enter your mailbox password (or app-password) once. It will be encrypted and reused for automatic login.</p>
+    {{message}}
+    <form method="post" action="{{form_action}}">
+      <input type="hidden" name="_token" value="{{csrf_token}}">
+
+      <div class="grid">
+        <div class="full">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required value="{{email}}">
+        </div>
+
+        <div class="full">
+          <label for="app_password">Mailbox password / app-password</label>
+          <input id="app_password" name="app_password" type="password" required autocomplete="new-password">
+        </div>
+
+        <div>
+          <label for="imap_host">IMAP host</label>
+          <input id="imap_host" name="imap_host" type="text" value="{{imap_host}}">
+        </div>
+        <div>
+          <label for="imap_port">IMAP port</label>
+          <input id="imap_port" name="imap_port" type="number" value="{{imap_port}}">
+        </div>
+        <div>
+          <label for="imap_security">IMAP security</label>
+          <select id="imap_security" name="imap_security">
+            <option value="ssl" {{imap_security_ssl_selected}}>SSL (implicit TLS)</option>
+            <option value="tls" {{imap_security_tls_selected}}>TLS (STARTTLS)</option>
+            <option value="starttls" {{imap_security_starttls_selected}}>STARTTLS</option>
+            <option value="none" {{imap_security_none_selected}}>None</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="smtp_host">SMTP host</label>
+          <input id="smtp_host" name="smtp_host" type="text" value="{{smtp_host}}">
+        </div>
+        <div>
+          <label for="smtp_port">SMTP port</label>
+          <input id="smtp_port" name="smtp_port" type="number" value="{{smtp_port}}">
+        </div>
+        <div>
+          <label for="smtp_security">SMTP security</label>
+          <select id="smtp_security" name="smtp_security">
+            <option value="ssl" {{smtp_security_ssl_selected}}>SSL (465)</option>
+            <option value="tls" {{smtp_security_tls_selected}}>TLS (587)</option>
+            <option value="starttls" {{smtp_security_starttls_selected}}>STARTTLS</option>
+            <option value="none" {{smtp_security_none_selected}}>None</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label><input type="checkbox" name="smtp_auth" value="1" {{smtp_auth_checked}}> SMTP requires authentication</label>
+        </div>
+
+        <div class="full">
+          <label for="smtp_user">SMTP username</label>
+          <input id="smtp_user" name="smtp_user" type="text" value="{{smtp_user}}">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" type="submit" name="intent" value="test">Test connection</button>
+        <button type="submit" name="intent" value="save">Save and continue</button>
+      </div>
+      <div class="hint">No plaintext passwords are stored in the database.</div>
+    </form>
+  </main>
+</body>
+</html>

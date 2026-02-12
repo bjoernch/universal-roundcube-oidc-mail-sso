@@ -1,0 +1,8 @@
+.env
+.env.local
+.DS_Store
+*.log
+vendor/
+node_modules/
+tmp/
+temp/

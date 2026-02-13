@@ -10,6 +10,7 @@ This plugin is for teams/families who already host mail at an external provider 
 - [Admin and User Flows](./flows.md)
 - [Security Model](./security.md)
 - [Operations, Testing, and Updates](./operations.md)
+- [Packagist Submission Guide](./packagist.md)
 
 ## Scope
 

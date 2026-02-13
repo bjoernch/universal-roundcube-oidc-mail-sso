@@ -1,0 +1,27 @@
+{
+  "name": "bjoernch/universal-roundcube-oidc-mail-sso",
+  "description": "Universal Roundcube OIDC SSO plugin with mailbox provisioning, policy controls, and encrypted credential storage",
+  "type": "library",
+  "keywords": [
+    "roundcube",
+    "oidc",
+    "sso",
+    "imap",
+    "smtp",
+    "webmail"
+  ],
+  "homepage": "https://github.com/bjoernch/universal-roundcube-oidc-mail-sso",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Bjoern Felgner"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  },
+  "support": {
+    "issues": "https://github.com/bjoernch/universal-roundcube-oidc-mail-sso/issues",
+    "source": "https://github.com/bjoernch/universal-roundcube-oidc-mail-sso"
+  }
+}

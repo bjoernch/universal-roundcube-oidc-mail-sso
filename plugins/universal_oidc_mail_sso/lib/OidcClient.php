@@ -126,6 +126,27 @@ class OidcClient
         ]);
     }
 
+    public function buildEndSessionUrl(array $discovery, string $idTokenHint, string $postLogoutRedirectUri = ''): string
+    {
+        $endpoint = (string) ($discovery['end_session_endpoint'] ?? '');
+        if ($endpoint === '') {
+            return '';
+        }
+
+        $params = [
+            'id_token_hint' => $idTokenHint,
+        ];
+
+        if ($postLogoutRedirectUri !== '') {
+            $params['post_logout_redirect_uri'] = $postLogoutRedirectUri;
+            if (!empty($this->config['client_id'])) {
+                $params['client_id'] = (string) $this->config['client_id'];
+            }
+        }
+
+        return $endpoint . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+    }
+
     private function httpJson(string $method, string $url, array $options = []): array
     {
         $body = $this->http($method, $url, $options);

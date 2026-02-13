@@ -13,7 +13,7 @@ require_once __DIR__ . '/lib/Storage.php';
 
 class universal_oidc_mail_sso extends rcube_plugin
 {
-    public $task = 'login|mail|settings';
+    public $task = 'login|mail|settings|logout';
 
     private const SESSION_OIDC_SUB = 'universal_oidc_mail_sso_oidc_sub';
     private const SESSION_OIDC_EMAIL = 'universal_oidc_mail_sso_oidc_email';
@@ -21,6 +21,7 @@ class universal_oidc_mail_sso extends rcube_plugin
     private const SESSION_OIDC_STATE = 'universal_oidc_mail_sso_oidc_state';
     private const SESSION_OIDC_CODE_VERIFIER = 'universal_oidc_mail_sso_oidc_code_verifier';
     private const SESSION_OIDC_GROUPS = 'universal_oidc_mail_sso_oidc_groups';
+    private const SESSION_OIDC_ID_TOKEN = 'universal_oidc_mail_sso_id_token';
     private const SESSION_AUTLOGIN = 'universal_oidc_mail_sso_autologin';
     private const SESSION_SETUP_RATE = 'universal_oidc_mail_sso_setup_rate';
     private const PREF_OIDC_GROUPS = 'universal_oidc_mail_sso_groups';
@@ -39,6 +40,7 @@ class universal_oidc_mail_sso extends rcube_plugin
     private ?Crypto $crypto = null;
     private ?string $cryptoInitError = null;
     private ?array $policyCache = null;
+    private ?string $pendingLogoutIdToken = null;
 
     public function init(): void
     {
@@ -57,6 +59,7 @@ class universal_oidc_mail_sso extends rcube_plugin
         $this->add_hook('authenticate', [$this, 'authenticate']);
         $this->add_hook('storage_connect', [$this, 'storageConnect']);
         $this->add_hook('smtp_connect', [$this, 'smtpConnect']);
+        $this->add_hook('logout_after', [$this, 'logoutAfter']);
 
         $this->register_action(self::ACTION_LOGIN, [$this, 'actionLogin']);
         $this->register_action(self::ACTION_CALLBACK, [$this, 'actionCallback']);
@@ -72,20 +75,41 @@ class universal_oidc_mail_sso extends rcube_plugin
     public function startup(array $args): array
     {
         $action = rcube_utils::get_input_value('_action', rcube_utils::INPUT_GPC);
+        $adminActions = [
+            self::ACTION_ADMIN,
+            self::ACTION_ADMIN_SAVE_POLICY,
+            self::ACTION_ADMIN_DELETE_USER,
+            self::ACTION_ADMIN_SET_USER_STATUS,
+        ];
+
+        // Ensure direct admin action links always route to a valid auth flow.
+        if (is_string($action) && in_array($action, $adminActions, true)) {
+            if (empty($_SESSION['user_id'])) {
+                $this->redirectTo($this->urlForAction(self::ACTION_LOGIN));
+            }
+
+            if ($this->rc->task !== 'settings') {
+                $this->redirectTo($this->rc->url(['task' => 'settings', 'action' => $action]));
+            }
+        }
 
         // If admin plugin endpoints are accessed directly without a Roundcube
         // session, start OIDC login flow instead of failing with access errors.
         if ($this->rc->task === 'settings'
             && is_string($action)
-            && in_array($action, [
-                self::ACTION_ADMIN,
-                self::ACTION_ADMIN_SAVE_POLICY,
-                self::ACTION_ADMIN_DELETE_USER,
-                self::ACTION_ADMIN_SET_USER_STATUS,
-            ], true)
+            && in_array($action, $adminActions, true)
             && empty($_SESSION['user_id'])
         ) {
             $this->redirectTo($this->urlForAction(self::ACTION_LOGIN));
+        }
+
+        // Capture id_token on logout request. We'll redirect to OIDC
+        // end_session_endpoint in logoutAfter(), after local logout completes.
+        if ($this->rc->task === 'logout') {
+            $idToken = $_SESSION[self::SESSION_OIDC_ID_TOKEN] ?? null;
+            if (is_string($idToken) && $idToken !== '') {
+                $this->pendingLogoutIdToken = $idToken;
+            }
         }
 
         if ($this->rc->task !== 'login' || !empty($_SESSION['user_id'])) {
@@ -319,6 +343,7 @@ class universal_oidc_mail_sso extends rcube_plugin
         $_SESSION[self::SESSION_OIDC_SUB] = $sub;
         $_SESSION[self::SESSION_OIDC_EMAIL] = $email;
         $_SESSION[self::SESSION_OIDC_GROUPS] = $groups;
+        $_SESSION[self::SESSION_OIDC_ID_TOKEN] = (string) ($token['id_token'] ?? '');
 
         $existingIdentity = $this->storage->getIdentityBySub($sub);
         if (!empty($existingIdentity['is_disabled'])) {
@@ -343,6 +368,27 @@ class universal_oidc_mail_sso extends rcube_plugin
         }
 
         $this->redirectTo($this->urlForAction(self::ACTION_AUTOLOGIN));
+    }
+
+    public function logoutAfter(array $args): array
+    {
+        if ($this->pendingLogoutIdToken === null || $this->pendingLogoutIdToken === '') {
+            return $args;
+        }
+
+        try {
+            $oidc = $this->oidcClient();
+            $discovery = $oidc->discover();
+            $postLogoutRedirect = (string) $this->cfg('post_logout_redirect_uri', $this->externalBaseUrl() . '/');
+            $url = $oidc->buildEndSessionUrl($discovery, $this->pendingLogoutIdToken, $postLogoutRedirect);
+            if ($url !== '') {
+                $this->redirectTo($url);
+            }
+        } catch (Throwable $e) {
+            $this->log('oidc_logout_redirect_failed', ['err' => $e->getMessage()]);
+        }
+
+        return $args;
     }
 
     public function actionAutologin(): void

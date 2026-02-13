@@ -1,5 +1,8 @@
 # Operations, Testing, and Updates
 
+If you are integrating into an existing Roundcube deployment, start here first:
+- [Existing Roundcube Docker Setup](./existing-roundcube-docker.md)
+
 ## Update from GitHub
 
 Repository: <https://github.com/bjoernch/universal-roundcube-oidc-mail-sso>

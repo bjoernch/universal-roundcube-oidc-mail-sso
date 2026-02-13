@@ -5,6 +5,7 @@ This plugin is for teams/families who already host mail at an external provider 
 ## Start here
 
 - [Quick Start](./quickstart.md)
+- [Existing Roundcube Docker Setup (file placement + git commands)](./existing-roundcube-docker.md)
 - [Configuration Reference (all parameters)](./configuration.md)
 - [Admin and User Flows](./flows.md)
 - [Security Model](./security.md)

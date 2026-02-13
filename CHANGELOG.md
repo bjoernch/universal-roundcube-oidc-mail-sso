@@ -4,6 +4,34 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-02-13
+
+### Added
+- Composer metadata for official package submission:
+  - `composer.json` at repository root
+  - package name `bjoernch/universal_oidc_mail_sso`
+  - package type `roundcube-plugin`
+  - `roundcube/plugin-installer` dependency
+  - Roundcube installer metadata (`extra.roundcube`)
+- Root compatibility entry files for installer-based plugin layout:
+  - `universal_oidc_mail_sso.php`
+  - `callback_bridge.php`
+  - `config.inc.php.dist`
+- New documentation for existing Docker-based Roundcube installations:
+  - `docs/existing-roundcube-docker.md`
+- New Packagist submission guide:
+  - `docs/packagist.md`
+
+### Changed
+- Composer package description clarified to emphasize IMAP/SMTP provisioning.
+- Documentation index updated with explicit links for Packagist and existing Docker deployment integration.
+
+### Fixed
+- Release workflow validation issue in `.github/workflows/release-artifacts.yml`:
+  - avoid direct `secrets.*` usage in step `if` expression
+  - use job-level env wiring for optional GPG import
+  - add explicit `contents: write` permission for GitHub release uploads
+
 ## [0.3.0] - 2026-02-13
 
 ### Added

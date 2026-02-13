@@ -1,7 +1,7 @@
 {
-  "name": "bjoernch/universal-roundcube-oidc-mail-sso",
+  "name": "bjoernch/universal_oidc_mail_sso",
   "description": "Universal Roundcube OIDC SSO plugin with IMAP/SMTP mailbox provisioning, policy controls, and encrypted credential storage",
-  "type": "library",
+  "type": "roundcube-plugin",
   "keywords": [
     "roundcube",
     "oidc",
@@ -18,7 +18,14 @@
     }
   ],
   "require": {
-    "php": ">=8.1"
+    "php": ">=8.1",
+    "roundcube/plugin-installer": "^0.3.0"
+  },
+  "extra": {
+    "roundcube": {
+      "min-version": "1.6.0",
+      "sql-dir": "plugins/universal_oidc_mail_sso/SQL"
+    }
   },
   "support": {
     "issues": "https://github.com/bjoernch/universal-roundcube-oidc-mail-sso/issues",

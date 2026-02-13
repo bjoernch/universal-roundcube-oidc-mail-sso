@@ -7,6 +7,26 @@ Example base path used below:
 
 Adjust paths and service names to your environment.
 
+## Composer-first install (recommended after Packagist submission)
+
+Inside your existing Roundcube project root:
+
+```sh
+cd /path/to/roundcube
+curl -s https://getcomposer.org/installer | php
+cp composer.json-dist composer.json 2>/dev/null || true
+php composer.phar require bjoernch/universal_oidc_mail_sso:^0.3
+```
+
+Then activate plugin in Roundcube config:
+
+```php
+// config/config.inc.php
+$config['plugins'][] = 'universal_oidc_mail_sso';
+```
+
+If you use this Composer-first approach, you can skip the git-clone mount method below.
+
 ## 1. Place plugin files
 
 ### Option A (recommended): keep plugin as git repo inside your stack

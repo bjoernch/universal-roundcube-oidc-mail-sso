@@ -4,7 +4,7 @@
 
 This repository is configured with:
 
-- `name`: `bjoernch/universal-roundcube-oidc-mail-sso`
+- `name`: `bjoernch/universal_oidc_mail_sso`
 
 Packagist will lock this name once first submitted.
 
@@ -19,6 +19,12 @@ Packagist will lock this name once first submitted.
 On Packagist Submit page, use repository URL:
 
 - `https://github.com/bjoernch/universal-roundcube-oidc-mail-sso`
+
+After submission, install in a Roundcube instance with:
+
+```sh
+php composer.phar require bjoernch/universal_oidc_mail_sso:^0.3
+```
 
 ## Enable auto-update webhook (GitHub manual setup)
 

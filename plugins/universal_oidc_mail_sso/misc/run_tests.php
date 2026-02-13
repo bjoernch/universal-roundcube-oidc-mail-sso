@@ -141,7 +141,75 @@ function testOidcDiscoveryAndJwksValidation(): void
     ok($name);
 }
 
+function testEndSessionUrlBuilder(): void
+{
+    $name = 'oidc end-session URL builder';
+
+    try {
+        $client = new OidcClient([
+            'issuer' => 'https://oidc.example.com',
+            'client_id' => 'roundcube-client',
+            'client_secret' => '',
+            'redirect_uri' => 'https://mail.example.com/cb',
+        ]);
+
+        $discovery = [
+            'end_session_endpoint' => 'https://oidc.example.com/logout',
+        ];
+
+        $url = $client->buildEndSessionUrl($discovery, 'id-token-hint', 'https://mail.example.com/');
+        if (strpos($url, 'id_token_hint=id-token-hint') === false || strpos($url, 'post_logout_redirect_uri=') === false) {
+            fail($name, 'end-session URL missing expected query params');
+        }
+    } catch (Throwable $e) {
+        fail($name, $e->getMessage());
+    }
+
+    ok($name);
+}
+
+function testDiscoveryAllowlistAndPinning(): void
+{
+    $name = 'oidc discovery allowlist + metadata pin';
+
+    $doc = [
+        'issuer' => 'https://oidc.example.com',
+        'authorization_endpoint' => 'https://oidc.example.com/authorize',
+        'token_endpoint' => 'https://oidc.example.com/token',
+        'jwks_uri' => 'https://oidc.example.com/jwks',
+    ];
+    $pin = hash('sha256', json_encode($doc, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+    $httpHandler = static function (string $method, string $url) use ($doc): string {
+        if ($method === 'GET' && $url === 'https://oidc.example.com/.well-known/openid-configuration') {
+            return json_encode($doc, JSON_UNESCAPED_SLASHES);
+        }
+        throw new RuntimeException('Unexpected request: ' . $method . ' ' . $url);
+    };
+
+    try {
+        $client = new OidcClient([
+            'issuer' => 'https://oidc.example.com',
+            'client_id' => 'roundcube-client',
+            'client_secret' => '',
+            'redirect_uri' => 'https://mail.example.com/cb',
+            'allowed_issuers' => 'https://oidc.example.com',
+            'metadata_pin_sha256' => $pin,
+        ], $httpHandler);
+        $discovery = $client->discover();
+        if (($discovery['issuer'] ?? '') !== 'https://oidc.example.com') {
+            fail($name, 'issuer mismatch');
+        }
+    } catch (Throwable $e) {
+        fail($name, $e->getMessage());
+    }
+
+    ok($name);
+}
+
 testCryptoRoundtrip();
 testOidcDiscoveryAndJwksValidation();
+testEndSessionUrlBuilder();
+testDiscoveryAllowlistAndPinning();
 
 echo "All tests passed.\n";

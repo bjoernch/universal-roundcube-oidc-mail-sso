@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+jobs:
+  lint-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: openssl, sodium, curl
+
+      - name: PHP syntax lint
+        run: |
+          find plugins -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Security lint
+        run: php plugins/universal_oidc_mail_sso/misc/security_lint.php
+
+      - name: Unit tests
+        run: php plugins/universal_oidc_mail_sso/misc/run_tests.php
+
+      - name: Shell syntax lint
+        run: |
+          bash -n scripts/smoke_web_flows.sh

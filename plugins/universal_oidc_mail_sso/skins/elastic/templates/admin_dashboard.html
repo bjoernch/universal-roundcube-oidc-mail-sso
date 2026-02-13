@@ -3,101 +3,274 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SSO Admin Dashboard</title>
+  <title>OIDC Mail SSO Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background:#f4f6f9; color:#1d2733; margin:0; }
-    .wrap { max-width:1200px; margin:24px auto; padding:0 12px; }
-    .card { background:#fff; border:1px solid #d8e0ea; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,.05); padding:16px; margin-bottom:14px; }
-    h1 { margin:0 0 8px; font-size:24px; }
-    h2 { margin:0 0 10px; font-size:18px; }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th, td { border:1px solid #d8e0ea; padding:6px 8px; text-align:left; vertical-align:top; }
-    th { background:#f6f8fb; }
-    .hint { color:#5d6c7c; font-size:12px; margin-top:8px; }
-    .info { margin-top:10px; background:#f2f7ff; border:1px solid #bcd3ff; border-radius:8px; padding:10px 12px; }
-    .info ul { margin:8px 0 0 18px; padding:0; color:#2f4760; font-size:13px; }
-    label { display:block; font-size:13px; font-weight:600; margin:0 0 6px; }
-    input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #c5cfda; border-radius:8px; font-size:13px; margin-bottom:8px; }
-    button { background:#0b5fff; color:#fff; border:none; border-radius:8px; padding:10px 14px; font-size:13px; cursor:pointer; }
-    @media (max-width: 900px) { table { font-size:12px; } }
+    body { background: #f8f9fa; }
+    .wizard-card {
+      border: 1px solid #dee2e6;
+      border-radius: 1rem;
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+      background: #fff;
+    }
+    .section-card {
+      border: 1px solid #dee2e6;
+      border-radius: .9rem;
+      background: #fff;
+      box-shadow: 0 .2rem .5rem rgba(0,0,0,.05);
+    }
+    .table thead th {
+      white-space: nowrap;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: #6c757d;
+    }
+    .table td {
+      white-space: nowrap;
+      vertical-align: top;
+    }
+    .status-badge {
+      border-radius: 999px;
+      padding: .2rem .55rem;
+      font-size: .75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active { background: #d1e7dd; color: #0f5132; }
+    .status-disabled { background: #f8d7da; color: #842029; }
+    .status-locked { background: #fff3cd; color: #664d03; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .policy-block {
+      border: 1px solid #e9ecef;
+      border-radius: .8rem;
+      padding: 1rem;
+      background: #fcfcfd;
+    }
+    .form-check-label {
+      white-space: normal;
+    }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <section class="card">
-      <h1>SSO Admin Dashboard</h1>
-      <div class="hint">Access is restricted to users in the <code>webmail_admin</code> group (configurable).</div>
-      <div class="info">
-        <strong>Universal OIDC Mail SSO capabilities</strong>
-        <ul>
-          <li>OIDC login with automatic mailbox profile mapping.</li>
-          <li>Strict email identity binding by default (OIDC email only).</li>
-          <li>Central policy controls for allowed email domains and IMAP/SMTP hosts.</li>
-          <li>Audit trail and account lifecycle actions (disable/delete mappings).</li>
-        </ul>
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12">
+        <section class="wizard-card mb-4">
+          <div class="p-4 p-lg-5 d-flex flex-wrap gap-3 align-items-center justify-content-between border-bottom">
+            <div>
+              <h1 class="h4 mb-1">Universal OIDC Mail SSO</h1>
+              <p class="text-muted mb-0">Admin dashboard for policy, mapped users, and audit visibility.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-primary" href="{{setup_mailbox_action_url}}">
+                <i class="bi bi-envelope-plus me-1"></i>Setup My Mailbox
+              </a>
+              <form method="post" action="{{admin_logout_action}}" class="m-0">
+                <input type="hidden" name="_token" value="{{csrf_token}}">
+                <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="p-4 p-lg-5">
+            <section class="section-card mb-4">
+              <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-shield-lock"></i>
+                <h2 class="h6 mb-0">Security and UX Policies</h2>
+              </div>
+              <div class="p-3 p-lg-4">
+                <form method="post" action="{{policy_form_action}}">
+                  <input type="hidden" name="_token" value="{{csrf_token}}">
+
+                  <div class="policy-block mb-3">
+                    <div class="row g-3">
+                      <div class="col-lg-4">
+                        <label class="form-label">Allowed email domains</label>
+                        <input class="form-control" name="allowed_email_domains" type="text" value="{{allowed_domains}}" placeholder="example.com,example.org or *">
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Allowed IMAP hosts</label>
+                        <input class="form-control" name="allowed_imap_hosts" type="text" value="{{allowed_imap_hosts}}" placeholder="imap.example.com,*">
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Allowed SMTP hosts</label>
+                        <input class="form-control" name="allowed_smtp_hosts" type="text" value="{{allowed_smtp_hosts}}" placeholder="smtp.example.com,*">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="policy-block mb-3">
+                    <div class="row g-3">
+                      <div class="col-lg-4">
+                        <label class="form-label">Login mode</label>
+                        <select class="form-select" name="login_mode" id="loginModeSelect">
+                          <option value="auto" {{login_mode_auto_selected}}>Auto redirect</option>
+                          <option value="button" {{login_mode_button_selected}}>In-page button</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-4" id="loginButtonTextWrap">
+                        <label class="form-label">Login button text</label>
+                        <input class="form-control" name="login_button_text" type="text" value="{{login_button_text}}" placeholder="Login with SSO">
+                      </div>
+                      <div class="col-lg-4 d-flex align-items-end" id="hideStandardWrap">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input" type="checkbox" name="hide_standard_login_form" value="1" id="hideStandard" {{hide_standard_login_form_checked}}>
+                          <label class="form-check-label" for="hideStandard">Hide standard login form</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="policy-block mb-3">
+                    <div class="row g-3">
+                      <div class="col-lg-4">
+                        <label class="form-label">Session idle timeout (sec)</label>
+                        <input class="form-control" name="session_idle_timeout_sec" type="number" min="60" value="{{session_idle_timeout_sec}}">
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Session absolute timeout (sec)</label>
+                        <input class="form-control" name="session_absolute_timeout_sec" type="number" min="300" value="{{session_absolute_timeout_sec}}">
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Auth lock duration (sec)</label>
+                        <input class="form-control" name="auth_lock_seconds" type="number" min="60" value="{{auth_lock_seconds}}">
+                      </div>
+                      <div class="col-12">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="allow_custom_mailbox_email" value="1" id="allowCustom" {{allow_custom_mailbox_email_checked}}>
+                          <label class="form-check-label" for="allowCustom">Allow custom mailbox email</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="alert alert-warning mb-3" role="alert">
+                    <strong>Zero-knowledge mode (client-side):</strong> changing this mode resets all mailbox mappings and local Roundcube user state, then starts onboarding again.
+                    <div class="mt-1 small">If disabled, mailbox passwords are still encrypted at rest with server-side key management (`RCUBE_MAILBOX_KEY`).</div>
+                  </div>
+
+                  <div class="policy-block mb-3">
+                    <div class="row g-3">
+                      <div class="col-lg-6 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                          <input class="form-check-input" type="checkbox" name="client_side_wrap_enabled" value="1" id="clientWrapMode" {{client_side_wrap_enabled_checked}}>
+                          <label class="form-check-label" for="clientWrapMode">Enable zero-knowledge mode (client-side)</label>
+                        </div>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Login init rate/5m</label>
+                        <input class="form-control" name="login_rate_limit_per_5m" type="number" min="1" value="{{login_rate_limit_per_5m}}">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Callback rate/5m</label>
+                        <input class="form-control" name="callback_rate_limit_per_5m" type="number" min="1" value="{{callback_rate_limit_per_5m}}">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Setup submit rate/5m</label>
+                        <input class="form-control" name="setup_rate_limit_per_5m" type="number" min="1" value="{{setup_rate_limit_per_5m}}">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="policy-block">
+                    <div class="row g-3">
+                      <div class="col-lg-6">
+                        <label class="form-label">Allowed issuers</label>
+                        <input class="form-control mono" name="allowed_issuers" type="text" value="{{allowed_issuers}}" placeholder="https://auth.example.com,https://auth2.example.com">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Metadata pin SHA-256 (optional)</label>
+                        <input class="form-control mono" name="metadata_pin_sha256" type="text" value="{{metadata_pin_sha256}}" placeholder="64-hex-value">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i>Save Policies</button>
+                  </div>
+                </form>
+              </div>
+            </section>
+
+            <section class="section-card mb-4">
+              <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-people"></i>
+                <h2 class="h6 mb-0">Mapped Accounts</h2>
+              </div>
+              <div class="p-3">
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Email</th>
+                        <th>OIDC Sub</th>
+                        <th>Status</th>
+                        <th>Mailbox</th>
+                        <th>IMAP Host</th>
+                        <th>SMTP Host</th>
+                        <th>Key ID</th>
+                        <th>Last OIDC Login</th>
+                        <th>Last Mailbox Use</th>
+                        <th>Last Seen IP</th>
+                        <th>Failed Auth</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{overview_rows}}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                <i class="bi bi-journal-text"></i>
+                <h2 class="h6 mb-0">Recent Audit Events</h2>
+              </div>
+              <div class="p-3">
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Status</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{audit_rows}}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>Access Policies</h2>
-      <form method="post" action="{{policy_form_action}}">
-        <input type="hidden" name="_token" value="{{csrf_token}}">
-
-        <label for="allowed_email_domains">Allowed email domains (comma-separated, `*` = any)</label>
-        <input id="allowed_email_domains" name="allowed_email_domains" type="text" value="{{allowed_domains}}" placeholder="example.com,example.org">
-
-        <label for="allowed_imap_hosts">Allowed IMAP hosts (comma-separated, `*` = any)</label>
-        <input id="allowed_imap_hosts" name="allowed_imap_hosts" type="text" value="{{allowed_imap_hosts}}" placeholder="imap.example.com,mail.example.org">
-
-        <label for="allowed_smtp_hosts">Allowed SMTP hosts (comma-separated, `*` = any)</label>
-        <input id="allowed_smtp_hosts" name="allowed_smtp_hosts" type="text" value="{{allowed_smtp_hosts}}" placeholder="smtp.example.com,mail.example.org">
-
-        <label><input type="checkbox" name="allow_custom_mailbox_email" value="1" {{allow_custom_mailbox_email_checked}}> Allow users to override mailbox email (default: disabled/strict OIDC email binding)</label>
-
-        <button type="submit">Save Policies</button>
-      </form>
-      <div class="hint">These policies are enforced on setup and SSO autologin.</div>
-    </section>
-
-    <section class="card">
-      <h2>Mapped Accounts</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>OIDC Sub</th>
-            <th>Status</th>
-            <th>Mailbox Profile</th>
-            <th>IMAP Host</th>
-            <th>SMTP Host</th>
-            <th>Last OIDC Login</th>
-            <th>Last Mailbox Use</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{overview_rows}}
-        </tbody>
-      </table>
-    </section>
-
-    <section class="card">
-      <h2>Recent Audit Events</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Event</th>
-            <th>Status</th>
-            <th>Email</th>
-            <th>Message</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{audit_rows}}
-        </tbody>
-      </table>
-    </section>
+    </div>
   </main>
+  <script>
+    (function () {
+      const modeSelect = document.getElementById('loginModeSelect');
+      const textWrap = document.getElementById('loginButtonTextWrap');
+      const hideWrap = document.getElementById('hideStandardWrap');
+      if (!modeSelect || !textWrap || !hideWrap) return;
+
+      const updateVisibility = () => {
+        const isButtonMode = modeSelect.value === 'button';
+        textWrap.style.display = isButtonMode ? '' : 'none';
+        hideWrap.style.display = isButtonMode ? '' : 'none';
+      };
+
+      modeSelect.addEventListener('change', updateVisibility);
+      updateVisibility();
+    })();
+  </script>
 </body>
 </html>

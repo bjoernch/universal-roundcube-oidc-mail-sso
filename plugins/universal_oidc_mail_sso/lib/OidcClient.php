@@ -33,6 +33,28 @@ class OidcClient
             }
         }
 
+        $discoveredIssuer = rtrim((string) $doc['issuer'], '/');
+        $configuredIssuer = rtrim((string) $issuer, '/');
+        if ($discoveredIssuer !== $configuredIssuer) {
+            throw new RuntimeException('OIDC issuer mismatch between config and discovery.');
+        }
+
+        $allowedIssuers = trim((string) ($this->config['allowed_issuers'] ?? ''));
+        if ($allowedIssuers !== '') {
+            $allowed = preg_split('/[\\s,]+/', strtolower($allowedIssuers), -1, PREG_SPLIT_NO_EMPTY);
+            if (!is_array($allowed) || !in_array(strtolower($configuredIssuer), $allowed, true)) {
+                throw new RuntimeException('OIDC issuer is not in allowlist.');
+            }
+        }
+
+        $pin = trim((string) ($this->config['metadata_pin_sha256'] ?? ''));
+        if ($pin !== '') {
+            $computed = hash('sha256', json_encode($doc, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            if (!hash_equals(strtolower($pin), strtolower($computed))) {
+                throw new RuntimeException('OIDC discovery metadata pin mismatch.');
+            }
+        }
+
         return $doc;
     }
 
@@ -145,6 +167,28 @@ class OidcClient
         }
 
         return $endpoint . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+    }
+
+    public function revokeToken(array $discovery, string $token, string $tokenTypeHint = 'access_token'): void
+    {
+        $endpoint = (string) ($discovery['revocation_endpoint'] ?? '');
+        if ($endpoint === '' || $token === '') {
+            return;
+        }
+
+        $post = [
+            'token' => $token,
+            'token_type_hint' => $tokenTypeHint,
+            'client_id' => $this->config['client_id'],
+        ];
+        if (!empty($this->config['client_secret'])) {
+            $post['client_secret'] = $this->config['client_secret'];
+        }
+
+        $this->http('POST', $endpoint, [
+            'headers' => ['Content-Type: application/x-www-form-urlencoded'],
+            'body' => http_build_query($post, '', '&', PHP_QUERY_RFC3986),
+        ]);
     }
 
     private function httpJson(string $method, string $url, array $options = []): array

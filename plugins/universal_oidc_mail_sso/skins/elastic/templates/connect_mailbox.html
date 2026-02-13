@@ -3,107 +3,246 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Connect account</title>
+  <title>Connect Mailbox</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background:#f4f6f9; color:#1d2733; margin:0; }
-    .card { max-width:700px; margin:40px auto; background:#fff; border:1px solid #d8e0ea; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,.06); padding:24px; }
-    h1 { margin:0 0 12px; font-size:24px; }
-    p { margin:0 0 20px; color:#4a5a6a; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    .full { grid-column:1 / -1; }
-    label { display:block; font-size:13px; font-weight:600; margin:0 0 6px; }
-    input,select { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #c5cfda; border-radius:8px; font-size:14px; }
-    button { margin-top:16px; background:#0b5fff; color:#fff; border:none; border-radius:8px; padding:11px 16px; font-size:14px; cursor:pointer; }
-    .hint { font-size:12px; color:#5d6c7c; margin-top:8px; }
-    .pizsso-error { background:#ffeded; border:1px solid #f7b4b4; color:#a90000; border-radius:8px; padding:10px 12px; margin:0 0 14px; }
-    .pizsso-success { background:#e9f9ef; border:1px solid #8ed6a4; color:#0f5f2b; border-radius:8px; padding:10px 12px; margin:0 0 14px; }
-    .actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
-    .actions button.secondary { background:#fff; color:#0b5fff; border:1px solid #8fb4ff; }
-    .info { margin:0 0 14px; background:#f2f7ff; border:1px solid #bcd3ff; border-radius:8px; padding:10px 12px; }
-    .info ul { margin:8px 0 0 18px; padding:0; color:#2f4760; font-size:13px; }
-    @media (max-width: 720px) { .card { margin:20px 12px; } .grid { grid-template-columns:1fr; } }
+    body { background: #f8f9fa; }
+    .wizard-card {
+      border: 1px solid #dee2e6;
+      border-radius: 1rem;
+      box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+      background: #fff;
+    }
+    .section-card {
+      border: 1px solid #e9ecef;
+      border-radius: .9rem;
+      background: #fcfcfd;
+    }
+    .pizsso-error,.pizsso-success {
+      border-radius: .65rem;
+      padding: .75rem .9rem;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      font-size: .95rem;
+    }
+    .pizsso-error { background: #fff1f2; border-color: #fecdd3; color: #9f1239; }
+    .pizsso-success { background: #ecfdf3; border-color: #bbf7d0; color: #166534; }
+    .hint { color: #6c757d; font-size: .85rem; margin-top: .25rem; }
+    .helper-box {
+      border: 1px solid #dee2e6;
+      background: #f8f9fa;
+      border-radius: .75rem;
+      padding: .85rem 1rem;
+    }
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Connect account</h1>
-    <p>Enter your mailbox password (or app-password) once. It will be encrypted and reused for automatic login.</p>
-    <div class="info">
-      <strong>Why this setup is secure and convenient</strong>
-      <ul>
-        <li>By default, your mailbox email is locked to your verified OIDC email.</li>
-        <li>Your mailbox password is encrypted before it is stored.</li>
-        <li>After setup, login is passwordless through your OIDC provider.</li>
-      </ul>
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-xl-9 col-lg-10">
+        <section class="wizard-card">
+          <div class="p-4 p-lg-5 border-bottom">
+            <h1 class="h4 mb-2">Connect your mailbox</h1>
+            <p class="text-muted mb-0">{{onboarding_banner_text}}</p>
+          </div>
+
+          <form method="post" action="{{form_action}}" id="mailbox-connect-form" class="p-4 p-lg-5">
+            <input type="hidden" name="_token" value="{{csrf_token}}">
+            <input type="hidden" name="client_wrap_blob" id="client_wrap_blob" value="">
+            <input type="hidden" name="client_wrap_nonce" id="client_wrap_nonce" value="">
+            <input type="hidden" name="client_wrap_salt" id="client_wrap_salt" value="">
+            <input type="hidden" name="client_wrap_kdf" id="client_wrap_kdf" value="">
+            <input type="hidden" name="client_wrap_iters" id="client_wrap_iters" value="">
+            <input type="hidden" name="client_wrap_version" id="client_wrap_version" value="">
+
+            {{message}}
+            {{compact_server_hint}}
+
+            <section class="section-card p-3 p-lg-4 mb-3">
+              <h2 class="h6 mb-3"><i class="bi bi-person-vcard me-2"></i>Identity</h2>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label" for="email">Email</label>
+                  <input class="form-control" id="email" name="email" type="email" required value="{{email}}" {{email_readonly_attr}}>
+                  {{email_policy_hint}}
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="app_password">Mailbox password / app-password</label>
+                  <input class="form-control" id="app_password" name="app_password" type="password" required autocomplete="new-password">
+                </div>
+              </div>
+            </section>
+
+            <div class="row g-3 mb-3" style="{{client_wrap_block_display}}">
+              <div class="col-12">
+                <div class="helper-box">
+                  <strong>Zero-knowledge mode (client-side) enabled</strong>
+                  <div class="mt-2">A mailbox passphrase is generated below. Save it in your password manager. You will need it after OIDC login to unlock mail access.</div>
+                  <div class="input-group mt-3">
+                    <input type="text" id="client_wrap_passphrase_display" class="form-control" readonly>
+                    <button type="button" id="client_wrap_copy" class="btn btn-outline-secondary">Copy</button>
+                  </div>
+                  <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="client_wrap_saved_ack">
+                    <label class="form-check-label" for="client_wrap_saved_ack">I saved this passphrase securely</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <section class="section-card p-3 p-lg-4 mb-3" style="{{server_section_style}}">
+              <h2 class="h6 mb-3"><i class="bi bi-hdd-network me-2"></i>Server configuration</h2>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">IMAP host</label>
+                  {{imap_host_field}}
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label" for="imap_port">IMAP port</label>
+                  <input class="form-control" id="imap_port" name="imap_port" type="number" value="{{imap_port}}">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label" for="imap_security">IMAP security</label>
+                  <select class="form-select" id="imap_security" name="imap_security">
+                    <option value="ssl" {{imap_security_ssl_selected}}>SSL</option>
+                    <option value="tls" {{imap_security_tls_selected}}>TLS</option>
+                    <option value="starttls" {{imap_security_starttls_selected}}>STARTTLS</option>
+                    <option value="none" {{imap_security_none_selected}}>None</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">SMTP host</label>
+                  {{smtp_host_field}}
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label" for="smtp_port">SMTP port</label>
+                  <input class="form-control" id="smtp_port" name="smtp_port" type="number" value="{{smtp_port}}">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label" for="smtp_security">SMTP security</label>
+                  <select class="form-select" id="smtp_security" name="smtp_security">
+                    <option value="ssl" {{smtp_security_ssl_selected}}>SSL</option>
+                    <option value="tls" {{smtp_security_tls_selected}}>TLS</option>
+                    <option value="starttls" {{smtp_security_starttls_selected}}>STARTTLS</option>
+                    <option value="none" {{smtp_security_none_selected}}>None</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="smtp_auth" name="smtp_auth" value="1" {{smtp_auth_checked}}>
+                    <label class="form-check-label" for="smtp_auth">SMTP requires authentication</label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="smtp_user">SMTP username</label>
+                  <input class="form-control" id="smtp_user" name="smtp_user" type="text" value="{{smtp_user}}">
+                </div>
+              </div>
+            </section>
+
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <button class="btn btn-outline-primary" type="submit" name="intent" value="test" {{test_button_disabled_attr}}>Test connection</button>
+              <button class="btn btn-primary" type="submit" name="intent" value="save">Save and continue</button>
+            </div>
+            {{test_button_disabled_hint}}
+            <div class="hint mt-2">If your admin locked servers, only email + app-password are required.</div>
+          </form>
+        </section>
+      </div>
     </div>
-    {{message}}
-    <form method="post" action="{{form_action}}">
-      <input type="hidden" name="_token" value="{{csrf_token}}">
-
-      <div class="grid">
-        <div class="full">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" required value="{{email}}" {{email_readonly_attr}}>
-          {{email_policy_hint}}
-        </div>
-
-        <div class="full">
-          <label for="app_password">Mailbox password / app-password</label>
-          <input id="app_password" name="app_password" type="password" required autocomplete="new-password">
-        </div>
-
-        <div>
-          <label for="imap_host">IMAP host</label>
-          <input id="imap_host" name="imap_host" type="text" value="{{imap_host}}">
-        </div>
-        <div>
-          <label for="imap_port">IMAP port</label>
-          <input id="imap_port" name="imap_port" type="number" value="{{imap_port}}">
-        </div>
-        <div>
-          <label for="imap_security">IMAP security</label>
-          <select id="imap_security" name="imap_security">
-            <option value="ssl" {{imap_security_ssl_selected}}>SSL (implicit TLS)</option>
-            <option value="tls" {{imap_security_tls_selected}}>TLS (STARTTLS)</option>
-            <option value="starttls" {{imap_security_starttls_selected}}>STARTTLS</option>
-            <option value="none" {{imap_security_none_selected}}>None</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="smtp_host">SMTP host</label>
-          <input id="smtp_host" name="smtp_host" type="text" value="{{smtp_host}}">
-        </div>
-        <div>
-          <label for="smtp_port">SMTP port</label>
-          <input id="smtp_port" name="smtp_port" type="number" value="{{smtp_port}}">
-        </div>
-        <div>
-          <label for="smtp_security">SMTP security</label>
-          <select id="smtp_security" name="smtp_security">
-            <option value="ssl" {{smtp_security_ssl_selected}}>SSL (465)</option>
-            <option value="tls" {{smtp_security_tls_selected}}>TLS (587)</option>
-            <option value="starttls" {{smtp_security_starttls_selected}}>STARTTLS</option>
-            <option value="none" {{smtp_security_none_selected}}>None</option>
-          </select>
-        </div>
-
-        <div class="full">
-          <label><input type="checkbox" name="smtp_auth" value="1" {{smtp_auth_checked}}> SMTP requires authentication</label>
-        </div>
-
-        <div class="full">
-          <label for="smtp_user">SMTP username</label>
-          <input id="smtp_user" name="smtp_user" type="text" value="{{smtp_user}}">
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="secondary" type="submit" name="intent" value="test">Test connection</button>
-        <button type="submit" name="intent" value="save">Save and continue</button>
-      </div>
-      <div class="hint">Admins can review mappings and enforce domain/host restrictions in the SSO admin dashboard.</div>
-    </form>
   </main>
+
+  <script>
+    (function () {
+      const wrapEnabled = '{{client_wrap_enabled}}' === '1';
+      if (!wrapEnabled || !window.crypto || !window.crypto.subtle) {
+        return;
+      }
+
+      const form = document.getElementById('mailbox-connect-form');
+      const passInput = document.getElementById('app_password');
+      const passDisplay = document.getElementById('client_wrap_passphrase_display');
+      const copyBtn = document.getElementById('client_wrap_copy');
+      const ack = document.getElementById('client_wrap_saved_ack');
+      const blobEl = document.getElementById('client_wrap_blob');
+      const nonceEl = document.getElementById('client_wrap_nonce');
+      const saltEl = document.getElementById('client_wrap_salt');
+      const kdfEl = document.getElementById('client_wrap_kdf');
+      const itersEl = document.getElementById('client_wrap_iters');
+      const verEl = document.getElementById('client_wrap_version');
+
+      const te = new TextEncoder();
+      const iterations = 250000;
+
+      function b64(buf) {
+        const bytes = new Uint8Array(buf);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary);
+      }
+
+      function randomPassphrase() {
+        const bytes = new Uint8Array(24);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes).map((b) => ('0' + b.toString(16)).slice(-2)).join('');
+      }
+
+      const generatedPassphrase = randomPassphrase();
+      passDisplay.value = generatedPassphrase;
+
+      copyBtn.addEventListener('click', async function () {
+        try {
+          await navigator.clipboard.writeText(generatedPassphrase);
+        } catch (e) {
+        }
+      });
+
+      form.addEventListener('submit', async function (e) {
+        const submitter = e.submitter;
+        const intent = submitter && submitter.value ? submitter.value : 'save';
+        if (intent !== 'save') {
+          return;
+        }
+
+        if (!ack.checked) {
+          e.preventDefault();
+          alert('Please confirm that you saved the generated passphrase.');
+          return;
+        }
+
+        const plain = passInput.value || '';
+        if (!plain) {
+          e.preventDefault();
+          alert('Mailbox password is required.');
+          return;
+        }
+
+        e.preventDefault();
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const keyMaterial = await crypto.subtle.importKey('raw', te.encode(generatedPassphrase), 'PBKDF2', false, ['deriveKey']);
+        const key = await crypto.subtle.deriveKey(
+          { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt']
+        );
+        const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, te.encode(plain));
+
+        blobEl.value = b64(ct);
+        nonceEl.value = b64(iv.buffer);
+        saltEl.value = b64(salt.buffer);
+        kdfEl.value = 'pbkdf2-sha256';
+        itersEl.value = String(iterations);
+        verEl.value = 'v1';
+        passInput.value = '';
+        form.submit();
+      });
+    })();
+  </script>
 </body>
 </html>
